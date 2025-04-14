@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Retail Insights</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FAF3E0;
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .title-box {
+            background-color: #2C3E50;
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .title-box h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #F5A623;
+        }
+        .title-box p {
+            font-size: 1.2em;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (min-width: 900px) {
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        .card {
+            background: #f1f8f7;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .card:hover {
+            transform: scale(1.02);
+        }
+        .card h3 {
+            font-size: 24px;
+            color: #2980B9;
+            text-transform: uppercase;
+            padding: 10px;
+            background-color: #b2dfdb;
+            border-radius: 8px;
+        }
+        .card p {
+            color: #666;
+        }
+        .card button {
+            margin-top: 15px;
+            padding: 10px 15px;
+            background-color: #2980B9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .card button:hover {
+            background-color: #1c6ea4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-box">
+            <h1>Smart Retail Insights</h1>
+            <p>Explore data-driven retail analytics and insights for better business decisions.</p>
+        </div>
+        <div class="grid">
+            <div class="card">
+                <h3>Overview Panel</h3>
+                <p>Get a comprehensive snapshot of your business performance.</p>
+                <button onclick="location.href='/overview'">Go to Overview</button>
+            </div>
+            <div class="card">
+                <h3>Sales Trends</h3>
+                <p>Track and analyze your sales performance over time.</p>
+                <button onclick="location.href='/dashboard'">View Sales Trends</button>
+            </div>
+            <div class="card">
+                <h3>Forecasting Graph</h3>
+                <p>Upload data to visualize forecasting trends.</p>
+                <button onclick="location.href='/forecast'">Go to Forecasting</button>
+            </div>
+            
+            <div class="card">
+                <h3>Dynamic Data Dashboard</h3>
+                <p>Leverage AI to forecast future sales with accuracy.</p>
+                <button onclick="location.href='/dynamic'">Go to Dynamic Dashboard</button>
+            </div>
+            <div class="card">
+                <h3>Profit/Loss Reports</h3>
+                <p>Generate detailed reports to assess financial health.</p>
+                <button onclick="location.href='/prolos'">View Reports</button>
+            </div>
+           
+        </div>
+    </div>
+</body>
+</html>

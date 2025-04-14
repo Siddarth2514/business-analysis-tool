@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forecasting Graph with File Upload</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FAF3E0;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .title-box {
+            background-color: #2C3E50;
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .title-box h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #F5A623;
+        }
+        .file-upload {
+            margin-bottom: 20px;
+        }
+        .file-upload input {
+            padding: 10px;
+            border: 2px solid #2980B9;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .file-upload button {
+            padding: 10px 20px;
+            background-color: #2980B9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .file-upload button:hover {
+            background-color: #1A5276;
+        }
+        .chart-container {
+            margin-top: 20px;
+        }
+        .tips {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #ECF0F1;
+            border-left: 5px solid #2980B9;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-box">
+            <h1>Forecasting Graph</h1>
+        </div>
+        <div class="file-upload">
+            <input type="file" id="fileInput" accept=".xlsx, .xls, .csv">
+            <button onclick="loadFile()">Load File</button>
+        </div>
+        <div>
+            <label for="metricSelect">Select Metric:</label>
+            <select id="metricSelect" onchange="updateChart()">
+                <option value="Sales">Sales</option>
+                <option value="Profit">Profit</option>
+                <option value="Stocks">Stocks</option>
+            </select>
+        </div>
+        <div class="chart-container">
+            <canvas id="forecastChart" width="400" height="200"></canvas>
+        </div>
+        <div class="tips" id="tips"></div>
+    </div>
+    <script>
+        let chart, chartData;
+        
+        function loadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    if (file.name.endsWith('.csv')) {
+                        parseCSV(content);
+                    } else {
+                        parseExcel(content);
+                    }
+                };
+                if (file.name.endsWith('.csv')) {
+                    reader.readAsText(file);
+                } else {
+                    reader.readAsBinaryString(file);
+                }
+            }
+        }
+
+        function parseCSV(content) {
+            Papa.parse(content, {
+                header: true,
+                dynamicTyping: true,
+                complete: function(results) {
+                    chartData = results.data;
+                    updateChart();
+                },
+                error: function(error) {
+                    console.error("Error parsing CSV:", error);
+                }
+            });
+        }
+
+        function parseExcel(content) {
+            const workbook = XLSX.read(content, { type: 'binary' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            chartData = XLSX.utils.sheet_to_json(worksheet);
+            updateChart();
+        }
+
+        function updateChart() {
+            if (!chartData) return;
+            const selectedMetric = document.getElementById('metricSelect').value;
+            const labels = chartData.map(row => row.Month);
+            const values = chartData.map(row => row[selectedMetric]);
+            
+            if (!labels.length || !values.length) {
+                alert("Invalid file format. Ensure the file contains 'Month' and the selected metric columns.");
+                return;
+            }
+            
+            drawChart(labels, values, selectedMetric);
+            displayTips(selectedMetric, values);
+        }
+
+        function drawChart(labels, values, metric) {
+            const ctx = document.getElementById('forecastChart').getContext('2d');
+            if (chart) {
+                chart.destroy();
+            }
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: metric,
+                        data: values,
+                        borderColor: '#2980B9',
+                        backgroundColor: 'rgba(41, 128, 185, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        pointRadius: 3,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: 'Month' } },
+                        y: { title: { display: true, text: metric } }
+                    }
+                }
+            });
+        }
+
+        function displayTips(metric, values) {
+            const tipsElement = document.getElementById('tips');
+            const avg = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2);
+            let tips = `Average ${metric}: ${avg}. `;
+            if (metric === "Sales") {
+                tips += "Analyze peak months to optimize stock and marketing campaigns.";
+            } else if (metric === "Profit") {
+                tips += "Identify cost-saving opportunities and focus on high-margin products.";
+            } else if (metric === "Stocks") {
+                tips += "Adjust inventory strategies to prevent overstock or shortages.";
+            }
+            tipsElement.innerHTML = <strong>Insights:</strong> ${tips};
+        }
+    </script>
+</body>
+</html>

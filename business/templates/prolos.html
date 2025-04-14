@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profit & Loss Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FAF3E0;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .title-box {
+            background-color: #2C3E50;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .title-box h2 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #F5A623;
+        }
+        .title-box p {
+            font-size: 1.2em;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #f1f8f7;
+        }
+        .result {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2980B9;
+            margin-top: 15px;
+            padding: 15px;
+            border-left: 5px solid #004d40;
+            background-color: #f1f8f7;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+        .result:hover {
+            transform: scale(1.02);
+        }
+        canvas {
+            margin-top: 20px;
+            max-height: 300px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #F5A623;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background: #2980B9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-box">
+            <h2>Profit & Loss Report</h2>
+            <p>Upload your profit & loss report to generate insights and visualize your financial data.</p>
+        </div>
+        
+        <input type="file" id="fileInput" accept=".csv, .xlsx">
+        <div class="result" id="result"></div>
+        <canvas id="profitChart"></canvas>
+    </div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                alert("Please select a file first!");
+                return;
+            }
+
+            const fileName = file.name;
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+
+            if (fileExtension === "csv") {
+                parseCSV(file);
+            } else if (fileExtension === "xlsx") {
+                parseExcel(file);
+            } else {
+                alert("Invalid file format! Please upload a CSV or Excel file.");
+            }
+        });
+
+        function parseCSV(file) {
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                complete: function(results) {
+                    processData(results.data);
+                }
+            });
+        }
+
+        function parseExcel(file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: "array" });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: true });
+
+                processData(jsonData);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processData(data) {
+            if (!data.length || !data[0].Revenue || !data[0].Expenses) {
+                alert("Invalid file format! Please check your data.");
+                return;
+            }
+
+            let labels = [];
+            let revenues = [];
+            let expenses = [];
+            let profits = [];
+
+            data.forEach(row => {
+                if (row.Date && row.Revenue && row.Expenses) {
+                    labels.push(row.Date);
+                    revenues.push(row.Revenue);
+                    expenses.push(row.Expenses);
+                    profits.push(row.Profit !== undefined ? row.Profit : row.Revenue - row.Expenses);
+                }
+            });
+
+            if (labels.length === 0) {
+                alert("No valid data found!");
+                return;
+            }
+
+            document.getElementById("result").innerHTML = 
+                `Total Records Processed: ${labels.length}`;
+
+            generateChart(labels, revenues, expenses, profits);
+        }
+
+        function generateChart(labels, revenues, expenses, profits) {
+            const ctx = document.getElementById('profitChart').getContext('2d');
+            if (window.myChart) {
+                window.myChart.destroy();
+            }
+
+            window.myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Revenue', data: revenues, borderColor: 'green', fill: false },
+                        { label: 'Expenses', data: expenses, borderColor: 'red', fill: false },
+                        { label: 'Profit', data: profits, borderColor: 'blue', fill: false }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+    </script>
+</body>
+</html>

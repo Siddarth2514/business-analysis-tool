@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Sales Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #00bcd4;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        input[type="file"] {
+            background-color: #1e1e1e;
+            color: white;
+            padding: 10px;
+            border: 2px solid #00bcd4;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        input[type="file"]:hover {
+            background-color: #00bcd4;
+            color: black;
+        }
+        #status {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #ffeb3b;
+        }
+        #charts {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .chart-container {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 188, 212, 0.5);
+            transition: transform 0.3s ease-in-out;
+            width: 45%;
+        }
+        .chart-container:hover {
+            transform: scale(1.05);
+            box-shadow: 0px 0px 20px rgba(255, 255, 255, 0.5);
+        }
+        .kpi-card {
+            background: linear-gradient(135deg, #ff4081, #81d4fa);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(255, 64, 129, 0.7);
+            margin-bottom: 20px;
+            width: 80%;
+            margin: 20px auto;
+            color: white;
+            font-weight: bold;
+        }
+        .kpi-card h2 {
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .kpi-card .kpi-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .kpi-card .kpi-button {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            box-shadow: 0px 0px 10px rgba(255, 152, 0, 0.7);
+            transition: background-color 0.3s ease;
+        }
+        .kpi-card .kpi-button:hover {
+            background-color: #ff5722;
+        }
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e1e1e;
+            border-radius: 50%;
+            padding: 15px;
+            box-shadow: 0px 0px 10px rgba(0, 188, 212, 0.5);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-container img {
+            width: 30px;
+            height: 30px;
+        }
+        .chat-box {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 188, 212, 0.5);
+            width: 300px;
+        }
+        .chat-box input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #00bcd4;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: #121212;
+            color: white;
+        }
+        .chat-box button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #00bcd4;
+            color: black;
+            cursor: pointer;
+        }
+        .chat-box button:hover {
+            background-color: #ffeb3b;
+        }
+        .chat-messages {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .chat-message {
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        .chat-message.user {
+            text-align: right;
+        }
+        .download-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ffeb3b;
+            color: black;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .download-button:hover {
+            background-color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📊 Dynamic Data Dashboard</h1>
+
+    <input type="file" id="fileInput" accept=".json, .xlsx, .xls">
+    <p id="status">Upload your JSON or Excel file to generate the dashboard.</p>
+
+    <div class="kpi-card" id="kpiCard">
+        <h2>Key Performance Indicators</h2>
+        <div class="kpi-buttons" id="kpiButtons">
+            <button class="kpi-button" id="totalRecords">Total Records</button>
+            <button class="kpi-button" id="uniqueCategories">Unique Categories</button>
+            <button class="kpi-button" id="averageValue">Average Value</button>
+        </div>
+    </div>
+
+    <div id="charts">
+        <div id="barchart" class="chart-container"></div>
+        <div id="piechart" class="chart-container"></div>
+        <div id="donutchart" class="chart-container"></div>
+        <div id="mapchart" class="chart-container"></div>
+        <div id="linechart" class="chart-container"></div>
+    </div>
+
+    <button class="download-button" onclick="downloadPDF()">Download as PDF</button>
+
+    <div class="chat-container" id="chatButton">
+        <img src="https://img.icons8.com/material-outlined/24/ffffff/chat--v1.png" alt="Chat Icon">
+    </div>
+
+    <div class="chat-box" id="chatBox">
+        <div class="chat-messages" id="chatMessages"></div>
+        <input type="text" id="chatInput" placeholder="Type your query...">
+        <button onclick="sendQuery()">Send</button>
+    </div>
+
+    <script>
+        let data = []; // Store the uploaded data globally
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+
+            if (fileExtension === 'json') {
+                reader.onload = function(e) {
+                    try {
+                        data = JSON.parse(e.target.result);
+                        document.getElementById("status").innerText = "File uploaded successfully!";
+                        generateDashboard(data);
+                        updateKPI(data);
+                    } catch (error) {
+                        document.getElementById("status").innerText = "Invalid JSON format!";
+                    }
+                };
+                reader.readAsText(file);
+            } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+                reader.onload = function(e) {
+                    const dataArray = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(dataArray, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+                    document.getElementById("status").innerText = "Excel file converted to JSON successfully!";
+                    generateDashboard(data);
+                    updateKPI(data);
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                document.getElementById("status").innerText = "Unsupported file format! Please upload JSON or Excel.";
+            }
+        });
+
+        function generateDashboard(data) {
+            // Detect categorical and numerical columns
+            let categories = {}, numerical = {};
+            Object.keys(data[0]).forEach(key => {
+                if (isNaN(parseFloat(data[0][key]))) {
+                    categories[key] = {};
+                } else {
+                    numerical[key] = [];
+                }
+            });
+
+            data.forEach(d => {
+                Object.keys(categories).forEach(cat => {
+                    categories[cat][d[cat]] = (categories[cat][d[cat]] || 0) + 1;
+                });
+                Object.keys(numerical).forEach(num => {
+                    numerical[num].push(parseFloat(d[num] || 0));
+                });
+            });
+
+            // Bar Chart
+            let barKey = Object.keys(categories)[0] || "Unknown";
+            Plotly.newPlot('barchart', [{
+                x: Object.keys(categories[barKey]),
+                y: Object.values(categories[barKey]),
+                type: 'bar',
+                marker: { color: 'cyan' }
+            }], { title: `Bar Chart (${barKey})`, paper_bgcolor: '#1e1e1e', font: { color: 'white' } });
+
+            // Pie Chart
+            let pieKey = Object.keys(categories)[1] || "Unknown";
+            Plotly.newPlot('piechart', [{
+                labels: Object.keys(categories[pieKey]),
+                values: Object.values(categories[pieKey]),
+                type: 'pie',
+                marker: { colors: ['#ff9800', '#f44336', '#ffeb3b', '#00bcd4', '#9c27b0'] }
+            }], { title: `Pie Chart (${pieKey})`, paper_bgcolor: '#1e1e1e', font: { color: 'white' } });
+
+            // Donut Chart
+            let donutKey = Object.keys(categories)[2] || "Unknown";
+            Plotly.newPlot('donutchart', [{
+                labels: Object.keys(categories[donutKey]),
+                values: Object.values(categories[donutKey]),
+                type: 'pie',
+                hole: 0.4,
+                marker: { colors: ['#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107'] }
+            }], { title: `Donut Chart (${donutKey})`, paper_bgcolor: '#1e1e1e', font: { color: 'white' } });
+
+            // Map Chart (Assumes country names in "country" column)
+            if (categories['country']) {
+                Plotly.newPlot('mapchart', [{
+                    type: 'choropleth',
+                    locations: Object.keys(categories['country']),
+                    locationmode: 'country names',
+                    z: Object.values(categories['country']),
+                    colorscale: 'Reds'
+                }], { title: 'Geographical Data', paper_bgcolor: '#1e1e1e', font: { color: 'white' } });
+            } else {
+                document.getElementById('mapchart').innerHTML = "<p>No country data available.</p>";
+            }
+
+            // Line Chart (Uses first numerical column)
+            let lineKey = Object.keys(numerical)[0] || "Unknown";
+            Plotly.newPlot('linechart', [{
+                x: Array.from({ length: numerical[lineKey].length }, (_, i) => i + 1),
+                y: numerical[lineKey],
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#9c27b0' }
+            }], { title: `Line Chart (${lineKey})`, paper_bgcolor: '#1e1e1e', font: { color: 'white' } });
+        }
+
+        function updateKPI(data) {
+            let totalRecords = data.length;
+            let uniqueCategories = new Set(data.map(item => item.category)).size;
+            let averageValue = data.reduce((sum, item) => sum + parseFloat(item.value || 0), 0) / totalRecords;
+
+            document.getElementById('totalRecords').innerText = `Total Records: ${totalRecords}`;
+            document.getElementById('uniqueCategories').innerText = `Unique Categories: ${uniqueCategories}`;
+            document.getElementById('averageValue').innerText = `Average Value: ${averageValue.toFixed(2)}`;
+        }
+
+        document.getElementById('chatButton').addEventListener('click', function() {
+            document.getElementById('chatBox').style.display = 'block';
+        });
+
+        function sendQuery() {
+            const query = document.getElementById('chatInput').value.trim().toLowerCase();
+            if (!query) return;
+
+            const chatMessages = document.getElementById('chatMessages');
+            const userMessage = document.createElement('div');
+            userMessage.classList.add('chat-message', 'user');
+            userMessage.innerText = query;
+            chatMessages.appendChild(userMessage);
+
+            let response = "I'm sorry, I didn't understand that.";
+
+            if (query.includes('total records')) {
+                response = `Total Records: ${data.length}`;
+            } else if (query.includes('unique categories')) {
+                const uniqueCategories = new Set(data.map(item => item.category)).size;
+                response = `Unique Categories: ${uniqueCategories}`;
+            } else if (query.includes('average value')) {
+                const averageValue = data.reduce((sum, item) => sum + parseFloat(item.value || 0), 0) / data.length;
+                response = `Average Value: ${averageValue.toFixed(2)}`;
+            } else if (query.includes('highest sale')) {
+                const salesData = {};
+                data.forEach(item => {
+                    if (item.category && item.value) {
+                        salesData[item.category] = (salesData[item.category] || 0) + parseFloat(item.value);
+                    }
+                });
+                const highestSaleCategory = Object.keys(salesData).reduce((a, b) => salesData[a] > salesData[b] ? a : b);
+                response = `Category with Highest Sale: ${highestSaleCategory}`;
+            } else if (query.includes('sales by category')) {
+                const salesData = {};
+                data.forEach(item => {
+                    if (item.category && item.value) {
+                        salesData[item.category] = (salesData[item.category] || 0) + parseFloat(item.value);
+                    }
+                });
+                response = `Sales by Category: ${JSON.stringify(salesData, null, 2)}`;
+            } else if (query.includes('total sales')) {
+                const totalSales = data.reduce((sum, item) => sum + parseFloat(item.value || 0), 0);
+                response = `Total Sales: ${totalSales.toFixed(2)}`;
+            }
+
+            const botMessage = document.createElement('div');
+            botMessage.classList.add('chat-message', 'bot');
+            botMessage.innerText = response;
+            chatMessages.appendChild(botMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            document.getElementById('chatInput').value = '';
+        }
+
+        function downloadPDF() {
+            const element = document.body;
+            const opt = {
+                margin: 1,
+                filename: 'dashboard.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            // New Promise-based usage:
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+
+</body>
+</html>

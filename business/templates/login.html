@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Signup</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { 
+            display: flex; 
+            justify-content: flex-start; 
+            align-items: center; 
+            height: 100vh; 
+            background: url('{{ url_for('static', filename='bgm.jpg') }}') no-repeat center center/cover;
+            padding-left: 10%;
+        }
+        .container-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .heading-box {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 10px 10px 0 0;
+            text-align: center;
+            width: 400px;
+        }
+        .heading-box h1 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .container { 
+            width: 400px; 
+            background: rgba(255, 255, 255, 0.5); /* Increased transparency */
+            padding: 30px; 
+            border-radius: 0 0 10px 10px; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+        }
+        .form { display: none; }
+        .form.active { display: block; }
+        h2 { text-align: center; margin-bottom: 20px; }
+        .input-box { margin-bottom: 15px; }
+        .input-box input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .btn { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .toggle { text-align: center; margin-top: 10px; cursor: pointer; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container-wrapper">
+        <div class="heading-box">
+            <h1>InsightsHub</h1>
+        </div>
+        <div class="container">
+            <form id="loginForm" class="form active" onsubmit="event.preventDefault(); window.location.href='/home';">
+                <h2>Login</h2>
+                <div class="input-box">
+                    <input type="email" placeholder="Email" required>
+                </div>
+                <div class="input-box">
+                    <input type="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+                <p class="toggle" onclick="toggleForm()">Don't have an account? Sign up</p>
+            </form>
+            
+            <form id="signupForm" class="form" onsubmit="event.preventDefault(); redirectToLogin();">
+                <h2>Sign Up</h2>
+                <div class="input-box">
+                    <input type="text" placeholder="Full Name" required>
+                </div>
+                <div class="input-box">
+                    <input type="email" placeholder="Email" required>
+                </div>
+                <div class="input-box">
+                    <input type="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn">Sign Up</button>
+                <p class="toggle" onclick="toggleForm()">Already have an account? Login</p>
+            </form>
+        </div>
+    </div>
+    <script>
+        function toggleForm() {
+            document.getElementById("loginForm").classList.toggle("active");
+            document.getElementById("signupForm").classList.toggle("active");
+        }
+        
+        function redirectToLogin() {
+            alert("Sign-up successful! Please log in.");
+            toggleForm();
+        }
+    </script>
+</body>
+</html>
